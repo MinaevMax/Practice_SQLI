@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    container_name: mydb
+    ports:
+      - "3306:3306"
+    expose:
+      - 3306
+    environment:
+      MYSQL_DATABASE: billdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - ./dbdata:/var/lib/mysql2
+    networks:
+      - net
+    
+  sqliserver:
+    depends_on:
+      - db
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - MYSQL_DATABASE=billdb
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootpassword
+      - PORT=:8080
+      - FLAG=practice{y0U_FoUnd_th3_f1Ag}
+    networks:
+      - net
+
+volumes:
+  db:
+
+networks:
+  net:
+    driver: bridge
+
+
+  
