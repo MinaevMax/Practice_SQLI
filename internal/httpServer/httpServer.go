@@ -34,6 +34,11 @@ type ResponseRes struct{
 	Result string `json:"result"`
 }
 
+type StatsResp struct{
+	BillsCount	int `json:"billscount"`
+	EmployeesCount	int `json:"empscount"`
+}
+
 func getbills(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Got a message!")
 	var input Request
@@ -213,13 +218,54 @@ func addBill(w http.ResponseWriter, r *http.Request) {
 	} else{
 		json.NewEncoder(w).Encode(ResponseRes{Result: "Failed to add a bill. Try again..."})
 	}
+}
+
+func checkstats(w http.ResponseWriter, r *http.Request){
+	log.Printf("Got checkStats request")
+	dbUser := os.Getenv("MYSQL_USER")
+	dbPassword := os.Getenv("MYSQL_PASSWORD")
+	dbName := os.Getenv("MYSQL_DATABASE")
 	
-	
+	var db *sql.DB
+    var err error
+    for i := 0; i < 5; i++ {
+        login := fmt.Sprintf("%s:%s@tcp(db:3306)/%s", dbUser, dbPassword, dbName)
+        db, err = sql.Open("mysql", login)
+        if err == nil {
+            // Проверяем соединение
+            if err = db.Ping(); err == nil {
+                break // Подключение успешно
+            }
+        }
+        log.Printf("Error connecting to database: %v. Retrying...", err)
+        time.Sleep(3 * time.Second) // Подождите перед повторной попыткой
+    }
+
+    if err != nil {
+        log.Fatalf("Failed to connect to database after multiple attempts: %v", err)
+    }
+	log.Printf("Succesfully connected to db!")
+
+	var billsCount int
+	var empsCount int
+	err = db.QueryRow("SELECT COUNT(*) FROM billdb.bills").Scan(&billsCount)
+	if err != nil {
+        log.Fatalf("Failed to get bills count", err)
+    }
+	err = db.QueryRow("SELECT COUNT(*) FROM billdb.employees").Scan(&empsCount)
+	if err != nil {
+        log.Fatalf("Failed to get employees count", err)
+    }
+
+	log.Printf("Succesfully got data.")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(StatsResp{BillsCount: billsCount, EmployeesCount: empsCount})
 }
 
 func Start(wg *sync.WaitGroup) {
 	defer wg.Done()
 	port := os.Getenv("PORT")
+	http.HandleFunc("/getstats", checkstats)
 	http.HandleFunc("/bills/add", addBill)
 	http.HandleFunc("/bills/check", getbills)
 	http.HandleFunc("/", homeHandler)

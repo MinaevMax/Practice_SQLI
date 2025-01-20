@@ -19,17 +19,6 @@
             display: none;
             padding: 10px;
         }
-        .text-area {
-            border: none;
-            background: none; 
-            resize: none;
-            width: 100%;
-            height: auto; 
-            font-family: inherit; 
-            font-size: inherit; 
-            color: inherit;
-            outline: none; 
-        }
     </style>
 </head>
 <body>
@@ -39,6 +28,7 @@
     <div class="accordion-content">
         <button id="openModal">Найти штрафы по имени</button>
         <button id="openAdder">Добавить штраф в базу данных</button>
+        <button id="openChecker">Статистика данных</button>
     </div>
 </div>
 
@@ -67,6 +57,19 @@
     </div>
 </div>
 
+<div id="checkStats" style="display:none;">
+    <div>
+        <h2>Количество записей:</h2>
+        <textarea id="billsstats"></textarea>
+        <label for="billsstats">-- Количество штрафов в базе</label>
+        <br>
+        <textarea id="empstats"></textarea>
+        <label for="empstats">-- Количество сотрудников в базе</label>
+        <br>
+        <button id="update">Обновить информацию</button>
+    </div>
+</div>
+
 <script>
     // Обработчик аккордеона
     document.querySelectorAll('.accordion-header').forEach(header => {
@@ -80,10 +83,17 @@
     document.getElementById('openModal').onclick = () => {
         document.getElementById('modal').style.display = 'block';
         document.getElementById('adder').style.display = 'none';
+        document.getElementById('checkStats').style.display = 'none';
     };
     document.getElementById('openAdder').onclick = () => {
         document.getElementById('modal').style.display = 'none';
         document.getElementById('adder').style.display = 'block';
+        document.getElementById('checkStats').style.display = 'none';
+    };
+    document.getElementById('openChecker').onclick = () => {
+        document.getElementById('modal').style.display = 'none';
+        document.getElementById('adder').style.display = 'none';
+        document.getElementById('checkStats').style.display = 'block';
     };
 
     // Отправка данных на сервер
@@ -100,7 +110,6 @@
         .then(response => response.json())
         .then(data => {
             document.getElementById('result').innerText = data.result.join("\n");
-            //resultDiv.innerHTML = "Штрафы:\n" + data.result.join(", \n");
         });
     };
 
@@ -121,7 +130,20 @@
         .then(response => response.json())
         .then(data => {
             document.getElementById('addresponse').innerText = data.result;
-            //resultDiv.innerHTML = "Штрафы:\n" + data.result.join(", \n");
+        });
+    };
+
+    document.getElementById('update').onclick = () => {
+        fetch('/getstats', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('billsstats').innerText = data.billscount;
+            document.getElementById('empstats').innerText = data.empscount;
         });
     };
 </script>
