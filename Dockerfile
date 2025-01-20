@@ -24,6 +24,7 @@ WORKDIR /app
 
 # Копируем собранное приложение из предыдущего шага
 COPY --from=builder /app/sqliserver /app/sqliserver
+COPY /templates /templates
 
 # Открываем порт
 EXPOSE $PORT

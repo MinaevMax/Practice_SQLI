@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аккордеон и Диалоговое Окно</title>
+    <style>
+        /* Стили для аккордеона */
+        .accordion {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+        }
+        .accordion-header {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .accordion-content {
+            display: none;
+            padding: 10px;
+        }
+        .text-area {
+            border: none;
+            background: none; 
+            resize: none;
+            width: 100%;
+            height: auto; 
+            font-family: inherit; 
+            font-size: inherit; 
+            color: inherit;
+            outline: none; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="accordion">
+    <div class="accordion-header">Выберите действие:</div>
+    <div class="accordion-content">
+        <button id="openModal">Найти штрафы по имени</button>
+    </div>
+</div>
+
+<!-- Диалоговое окно -->
+<div id="modal" style="display:none;">
+    <div>
+        <h2>Введите имя в поле ниже</h2>
+        <textarea id="userInput"></textarea>
+        <button id="submit">Отправить</button>
+    </div>
+    <h3>Your bills:</h3>
+    <textarea id="result" rows="10" cols="50" border="none" readonly></textarea>
+</div>
+
+<script>
+    // Обработчик аккордеона
+    document.querySelectorAll('.accordion-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        });
+    });
+
+    // Открытие и закрытие диалогового окна
+    document.getElementById('openModal').onclick = () => {
+        document.getElementById('modal').style.display = 'block';
+    };
+    /*document.getElementById('closeModal').onclick = () => {
+        document.getElementById('modal').style.display = 'none';
+    };*/
+
+    // Отправка данных на сервер
+    document.getElementById('submit').onclick = () => {
+        const userInput = document.getElementById('userInput').value;
+        fetch('/bills/check', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: userInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('result').value = data.result.join("\n");
+            //resultDiv.innerHTML = "Штрафы:\n" + data.result.join(", \n");
+        });
+    };
+</script>
+
+</body>
+</html>
