@@ -5,7 +5,7 @@ import (
   "fmt"
   "log"
   "net/http"
-  //"strings"
+  "strconv"
   "encoding/json"
   "sync"
   "os"
@@ -24,6 +24,16 @@ type Response struct{
 	Result []string `json:"result"`
 }
 
+type NewBill struct{
+	Name string `json:"name"`
+	Value string `json:"value"`
+	Employee_id string `json:"empid"`
+}
+
+type ResponseRes struct{
+	Result string `json:"result"`
+}
+
 func getbills(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Got a message!")
 	var input Request
@@ -33,7 +43,6 @@ func getbills(w http.ResponseWriter, r *http.Request) {
         return
     }
 	name := input.Text
-	log.Printf(name)
 
 	// Подключение к базе данных MySQL
 	dbUser := os.Getenv("MYSQL_USER")
@@ -107,9 +116,111 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addBill(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Trying to add a bill...")
+	var input NewBill
+    if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Error while getting data", err)
+        return
+    }
+	name := input.Name
+	value, _ := strconv.Atoi(input.Value)
+	empid, _ := strconv.Atoi(input.Employee_id)
+
+	// Подключение к базе данных MySQL
+	flag := os.Getenv("FLAG")
+	dbUser := os.Getenv("MYSQL_USER")
+	dbPassword := os.Getenv("MYSQL_PASSWORD")
+	dbName := os.Getenv("MYSQL_DATABASE")
+	
+	var db *sql.DB
+    var err error
+    for i := 0; i < 5; i++ {
+        login := fmt.Sprintf("%s:%s@tcp(db:3306)/%s", dbUser, dbPassword, dbName)
+        db, err = sql.Open("mysql", login)
+        if err == nil {
+            // Проверяем соединение
+            if err = db.Ping(); err == nil {
+                break // Подключение успешно
+            }
+        }
+        log.Printf("Error connecting to database: %v. Retrying...", err)
+        time.Sleep(3 * time.Second) // Подождите перед повторной попыткой
+    }
+
+    if err != nil {
+        log.Fatalf("Failed to connect to database after multiple attempts: %v", err)
+    }
+	log.Printf("Succesfully connected to db!")
+
+	var exists bool
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM billdb.employees WHERE id = ?)", empid).Scan(&exists)
+	if err != nil{
+		log.Printf("Failed to check employees", err)
+	}
+
+	var greateremp int
+	var maxval int 
+	_ = db.QueryRow("SELECT employee_id, SUM(value) FROM billdb.bills GROUP BY employee_id ORDER BY SUM(value) DESC LIMIT 1").Scan(&greateremp, &maxval)
+	if exists == false{
+		log.Printf("This employee id does not exists")
+		if maxval < value{
+			_, err = db.Exec("update billdb.employees set secret = ? where id=?", "empty", greateremp)
+			_, err := db.Exec("insert into billdb.employees (id, secret) values (?, ?)", empid, flag)
+			if err != nil{
+				log.Printf("Failed to add info to emps", err)
+			}
+		} else if maxval == value{
+			_, err := db.Exec("insert into billdb.employees (id, secret) values (?, ?)", empid, flag)
+			if err != nil{
+				log.Printf("Failed to add info to emps", err)
+			}
+		} else{
+			_, err := db.Exec("insert into billdb.employees (id, secret) values (?, ?)", empid, "empty")
+			if err != nil{
+				log.Printf("Failed to add info to emps", err)
+			}
+		}
+		_, err = db.Exec("insert into billdb.bills (name, employee_id, value) values (?, ?, ?)", name, empid, value)
+		if err != nil{
+			log.Printf("Failed to add info to bills table", err)
+		}
+	} else{
+		log.Printf("This employee id exists")
+		var newgreateremp int
+		_, err = db.Exec("insert into billdb.bills (name, employee_id, value) values (?, ?, ?)", name, empid, value)
+		if err != nil{
+			log.Printf("Failed to add info to bills table", err)
+		}
+		_ = db.QueryRow("SELECT employee_id FROM billdb.bills GROUP BY employee_id ORDER BY SUM(value) DESC LIMIT 1").Scan(&newgreateremp)
+
+		if newgreateremp != greateremp{
+			_, err = db.Exec("update billdb.employees set secret = ? where id=?", "empty", newgreateremp)
+			if err != nil{
+				log.Printf("Failed to add info to employees table", err)
+			}
+			_, err = db.Exec("insert into billdb.employees (id, secret) values (?, ?)", empid, flag)
+			if err != nil{
+				log.Printf("Failed to add info to employees table", err)
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err == nil{
+		json.NewEncoder(w).Encode(ResponseRes{Result: "Succesfully added a bill!"})
+	} else{
+		json.NewEncoder(w).Encode(ResponseRes{Result: "Failed to add a bill. Try again..."})
+	}
+	
+	
+}
+
 func Start(wg *sync.WaitGroup) {
 	defer wg.Done()
 	port := os.Getenv("PORT")
+	http.HandleFunc("/bills/add", addBill)
 	http.HandleFunc("/bills/check", getbills)
 	http.HandleFunc("/", homeHandler)
 	log.Println("Starting server on 8080...")

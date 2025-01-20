@@ -38,6 +38,7 @@
     <div class="accordion-header">Выберите действие:</div>
     <div class="accordion-content">
         <button id="openModal">Найти штрафы по имени</button>
+        <button id="openAdder">Добавить штраф в базу данных</button>
     </div>
 </div>
 
@@ -48,8 +49,22 @@
         <textarea id="userInput"></textarea>
         <button id="submit">Отправить</button>
     </div>
-    <h3>Your bills:</h3>
-    <textarea id="result" rows="10" cols="50" border="none" readonly></textarea>
+    <div id="results" style="display:none;">
+        <h3>Ваши штрафы:</h3>
+        <text id="result"></text>
+    </div>
+</div>
+
+<div id="adder" style="display:none;">
+    <div>
+        <h2>Введите имя, размер штрафа и ваш id в поля ниже</h2>
+        <textarea id="nameInput" rows="1" cols="25" placeholder="Имя"></textarea>
+        <textarea id="valueInput" rows="1" cols="13" placeholder="Размер штрафа"></textarea>
+        <textarea id="empidInput" rows="1" cols="15" placeholder="Ваш id"></textarea>
+        <button id="addbill">Добавить</button>
+        <br>
+        <text id="addresponse"></text>
+    </div>
 </div>
 
 <script>
@@ -64,13 +79,16 @@
     // Открытие и закрытие диалогового окна
     document.getElementById('openModal').onclick = () => {
         document.getElementById('modal').style.display = 'block';
+        document.getElementById('adder').style.display = 'none';
     };
-    /*document.getElementById('closeModal').onclick = () => {
+    document.getElementById('openAdder').onclick = () => {
         document.getElementById('modal').style.display = 'none';
-    };*/
+        document.getElementById('adder').style.display = 'block';
+    };
 
     // Отправка данных на сервер
     document.getElementById('submit').onclick = () => {
+        document.getElementById('results').style.display = 'block';
         const userInput = document.getElementById('userInput').value;
         fetch('/bills/check', {
             method: 'POST',
@@ -81,7 +99,28 @@
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('result').value = data.result.join("\n");
+            document.getElementById('result').innerText = data.result.join("\n");
+            //resultDiv.innerHTML = "Штрафы:\n" + data.result.join(", \n");
+        });
+    };
+
+    document.getElementById('addbill').onclick = () => {
+        const nameInput = document.getElementById('nameInput').value;
+        const valueInput = document.getElementById('valueInput').value;
+        const empidInput = document.getElementById('empidInput').value;
+        document.getElementById("nameInput").value = "";
+        document.getElementById("valueInput").value = "";
+        document.getElementById("empidInput").value = "";
+        fetch('/bills/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: nameInput, value: valueInput, empid: empidInput })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('addresponse').innerText = data.result;
             //resultDiv.innerHTML = "Штрафы:\n" + data.result.join(", \n");
         });
     };
