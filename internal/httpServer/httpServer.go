@@ -89,12 +89,10 @@ func getbills(w http.ResponseWriter, r *http.Request) {
 		var bill_id int
 		var bill_name string
 		var bill_val int
-		err := rows.Scan(&bill_id, &bill_name, &bill_val)
+		err = rows.Scan(&bill_id, &bill_name, &bill_val)
 		if err != nil{
-			log.Printf("Error occured %v", err)
-			continue
+			log.Printf("Failed to scan data", err)
 		}
-		log.Printf("Bill number %v per %v in the amount of %v", bill_id, bill_name, bill_val)
 		message = append(message, fmt.Sprintf("Bill number %v per %v in the amount of %v", bill_id, bill_name, bill_val))
 	}
 	if len(message) == 0{
@@ -132,6 +130,12 @@ func addBill(w http.ResponseWriter, r *http.Request) {
 	name := input.Name
 	value, _ := strconv.Atoi(input.Value)
 	empid, _ := strconv.Atoi(input.Employee_id)
+	if empid <= 0 || value <= 0{
+		log.Printf("Wrong data given...")
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(ResponseRes{Result: "You entered wrong data"})
+		return
+	}
 
 	// Подключение к базе данных MySQL
 	flag := os.Getenv("FLAG")

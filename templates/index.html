@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Аккордеон и Диалоговое Окно</title>
+    <title>Сервис для проверки штрафов</title>
     <style>
         /* Стили для аккордеона */
         .accordion {
@@ -50,7 +50,7 @@
         <h2>Введите имя, размер штрафа и ваш id в поля ниже</h2>
         <textarea id="nameInput" rows="1" cols="25" placeholder="Имя"></textarea>
         <textarea id="valueInput" rows="1" cols="13" placeholder="Размер штрафа"></textarea>
-        <textarea id="empidInput" rows="1" cols="15" placeholder="Ваш id"></textarea>
+        <textarea id="empidInput" rows="1" cols="15" placeholder="Ваш id(>=1)"></textarea>
         <button id="addbill">Добавить</button>
         <br>
         <text id="addresponse"></text>
@@ -61,10 +61,10 @@
     <div>
         <h2>Количество записей:</h2>
         <textarea id="billsstats"></textarea>
-        <label for="billsstats">-- Количество штрафов в базе</label>
+        <label for="billsstats">-- Количество записей в таблице штрафов</label>
         <br>
         <textarea id="empstats"></textarea>
-        <label for="empstats">-- Количество сотрудников в базе</label>
+        <label for="empstats">-- Количество записей в таблице сотрудников</label>
         <br>
         <button id="update">Обновить информацию</button>
     </div>

@@ -60,7 +60,7 @@ func Start(wg *sync.WaitGroup) {
 		log.Fatalf("Failed to reach bills db:", err)
 	}
 	
-	for i := 0; i < 8; i++{
+	for i := 1; i <= 8; i++{
 		_, err := db.Exec("insert into billdb.employees (secret) values (?)", "empty")
 		if err != nil{
 			log.Printf("Failed to add info to emps", err)
@@ -68,7 +68,7 @@ func Start(wg *sync.WaitGroup) {
 		//fmt.Println(res.LastInsertId())
 	}
 	
-	employees := make([]int, 8, 8)
+	employees_sums := make([]int, 8, 8)
 	for i := 0; i < 15; i++{
 		rand.Seed(time.Now().UnixNano())
 		emp := rand.Intn(8)
@@ -78,7 +78,7 @@ func Start(wg *sync.WaitGroup) {
 		if err != nil{
 			log.Printf("Failed to add info to bills", err)
 		}
-		employees[emp] += val
+		employees_sums[emp] += val
 		if err != nil{
 			panic(err)
 		}
@@ -86,13 +86,15 @@ func Start(wg *sync.WaitGroup) {
 	}
 
 	maxInd := 0
-	for i := 0; i < len(employees); i++{
-		if employees[i] > employees[maxInd]{
+	for i := 1; i < len(employees_sums); i++{
+		if employees_sums[i] > employees_sums[maxInd]{
 			maxInd = i
 		}
 	}
 
 	_, err = db.Exec("update billdb.employees set secret = ? where id=?", flag, maxInd)
-	
+	if err != nil{
+		log.Printf("Failed to add secret flag", err)
+	}
 }
 
