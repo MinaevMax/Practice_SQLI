@@ -1,152 +1,130 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сервис для проверки штрафов</title>
-    <style>
-        /* Стили для аккордеона */
-        .accordion {
-            background-color: #eee;
-            border: 1px solid #ccc;
-            margin: 10px 0;
-        }
-        .accordion-header {
-            padding: 10px;
-            cursor: pointer;
-        }
-        .accordion-content {
-            display: none;
-            padding: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fine Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-lg font-semibold flex items-center">
+        <svg class="h-6 w-6 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Fine Manager
+      </h1>
+      <ul class="flex space-x-6">
+        <li><a href="#" class="text-gray-600 hover:text-blue-500">Home</a></li>
+        <li><a href="#" class="text-gray-600 hover:text-blue-500">Contact Us</a></li>
+        <li><a href="#" class="text-gray-600 hover:text-blue-500">Help</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<div class="accordion">
-    <div class="accordion-header">Выберите действие:</div>
-    <div class="accordion-content">
-        <button id="openModal">Найти штрафы по имени</button>
-        <button id="openAdder">Добавить штраф в базу данных</button>
-        <button id="openChecker">Статистика данных</button>
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Search for a Fine -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">Search for a Fine</h2>
+      <input type="text" id="userInputName" placeholder="Enter name" class="w-full border rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      <button class="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600" id="checkButton">Search</button>
+      <p class="text-gray-600" id="result"></p>
     </div>
-</div>
 
-<!-- Диалоговое окно -->
-<div id="modal" style="display:none;">
-    <div>
-        <h2>Введите имя в поле ниже</h2>
-        <textarea id="userInput"></textarea>
-        <button id="submit">Отправить</button>
+    <!-- Add a New Fine -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">Add a New Fine</h2>
+      <input type="text" id="nameInput" placeholder="Person Name" class="w-full border rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      <input type="number" id="valueInput" placeholder="Amount" class="w-full border rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      <input type="number" id="empidInput" placeholder="Your id (&gt;=1)" class="w-full border rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      <button class="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600" id="addButton">Add Fine</button>
+      <p class="text-gray-600" id="addresponse"></p>
     </div>
-    <div id="results" style="display:none;">
-        <h3>Ваши штрафы:</h3>
-        <text id="result"></text>
-    </div>
-</div>
 
-<div id="adder" style="display:none;">
-    <div>
-        <h2>Введите имя, размер штрафа и ваш id в поля ниже</h2>
-        <textarea id="nameInput" rows="1" cols="25" placeholder="Имя"></textarea>
-        <textarea id="valueInput" rows="1" cols="13" placeholder="Размер штрафа"></textarea>
-        <textarea id="empidInput" rows="1" cols="15" placeholder="Ваш id(>=1)"></textarea>
-        <button id="addbill">Добавить</button>
-        <br>
-        <text id="addresponse"></text>
+    <!-- Total Records -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">Total Records</h2>
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <p class="text-gray-600">number of entries in the fine table</p>
+          <p id="billsstats" class="text-3xl font-bold"></p>
+        </div>
+        <div>
+          <p class="text-gray-600">number of entries in the employees table</p>
+          <p id="empstats" class="text-3xl font-bold"></p>
+        </div>
+      </div>
+      <button id="update" class="w-full bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600">Refresh</button>
     </div>
-</div>
+  </div>
 
-<div id="checkStats" style="display:none;">
-    <div>
-        <h2>Количество записей:</h2>
-        <textarea id="billsstats"></textarea>
-        <label for="billsstats">-- Количество записей в таблице штрафов</label>
-        <br>
-        <textarea id="empstats"></textarea>
-        <label for="empstats">-- Количество записей в таблице сотрудников</label>
-        <br>
-        <button id="update">Обновить информацию</button>
+  <!-- Footer -->
+  <footer class="bg-white shadow-md">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center text-sm text-gray-600">
+      <p>&copy; 2025 Fine Manager</p>
+      <div>
+        <a href="#" class="hover:underline">Privacy Policy</a>
+        <span class="mx-2">|</span>
+        <a href="#" class="hover:underline">Terms of Service</a>
+      </div>
     </div>
-</div>
+  </footer>
 
 <script>
-    // Обработчик аккордеона
-    document.querySelectorAll('.accordion-header').forEach(header => {
-        header.addEventListener('click', () => {
-            const content = header.nextElementSibling;
-            content.style.display = content.style.display === 'block' ? 'none' : 'block';
-        });
-    });
-
-    // Открытие и закрытие диалогового окна
-    document.getElementById('openModal').onclick = () => {
-        document.getElementById('modal').style.display = 'block';
-        document.getElementById('adder').style.display = 'none';
-        document.getElementById('checkStats').style.display = 'none';
-    };
-    document.getElementById('openAdder').onclick = () => {
-        document.getElementById('modal').style.display = 'none';
-        document.getElementById('adder').style.display = 'block';
-        document.getElementById('checkStats').style.display = 'none';
-    };
-    document.getElementById('openChecker').onclick = () => {
-        document.getElementById('modal').style.display = 'none';
-        document.getElementById('adder').style.display = 'none';
-        document.getElementById('checkStats').style.display = 'block';
-    };
-
     // Отправка данных на сервер
-    document.getElementById('submit').onclick = () => {
-        document.getElementById('results').style.display = 'block';
-        const userInput = document.getElementById('userInput').value;
-        fetch('/bills/check', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text: userInput })
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('result').innerText = data.result.join("\n");
-        });
-    };
+document.getElementById('checkButton').onclick = () => {
 
-    document.getElementById('addbill').onclick = () => {
-        const nameInput = document.getElementById('nameInput').value;
-        const valueInput = document.getElementById('valueInput').value;
-        const empidInput = document.getElementById('empidInput').value;
-        document.getElementById("nameInput").value = "";
-        document.getElementById("valueInput").value = "";
-        document.getElementById("empidInput").value = "";
-        fetch('/bills/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: nameInput, value: valueInput, empid: empidInput })
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('addresponse').innerText = data.result;
-        });
-    };
+    const userInput = document.getElementById('userInputName').value;
+    fetch('/bills/check', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: userInput })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('result').innerHTML = data.result.join("\n");
+    });
+};
 
-    document.getElementById('update').onclick = () => {
-        fetch('/getstats', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('billsstats').innerText = data.billscount;
-            document.getElementById('empstats').innerText = data.empscount;
-        });
-    };
+document.getElementById('addButton').onclick = () => {
+    const nameInput = document.getElementById('nameInput').value;
+    const valueInput = document.getElementById('valueInput').value;
+    const empidInput = document.getElementById('empidInput').value;
+
+    document.getElementById("nameInput").value = "";
+    document.getElementById("valueInput").value = "";
+    document.getElementById("empidInput").value = "";
+    fetch('/bills/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: nameInput, value: valueInput, empid: empidInput })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('addresponse').innerHTML = data.result;
+    });
+};
+
+document.getElementById('update').onclick = () => {
+    fetch('/getstats', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('billsstats').innerHTML = data.billscount;
+        document.getElementById('empstats').innerHTML = data.empscount;
+    });
+};
 </script>
-
 </body>
 </html>
