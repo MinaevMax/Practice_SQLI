@@ -107,7 +107,7 @@ func getbills(w http.ResponseWriter, r *http.Request) {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	//path := filepath.Join("./templates", "index.html")
 
-	t, err := template.ParseFiles("../../templates/test.html")
+	t, err := template.ParseFiles("../../templates/index.html")
 	if err != nil{
 		http.Error(w, err.Error(), 400)
 		log.Printf("Failed to make html page: %v", err)
